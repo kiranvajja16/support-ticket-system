@@ -1,6 +1,7 @@
 const express = require("express")
 const cors=require("cors");
 const authRoutes=require("./routes/authRoutes");
+const {protect} = require("./middleware/authMiddleware");
 require("dotenv").config();
 console.log(process.env.MONGO_URI);
 
@@ -15,6 +16,13 @@ app.use("/api/auth",authRoutes);
 
 app.get("/",(req,res)=>{
     res.send("Support Ticket System API is running...");
+});
+app.get("/api/profile", protect, (req, res) => {
+  res.json({
+    success: true,
+    message: "Protected Route Accessed",
+    user: req.user,
+  });
 });
 
 const PORT = process.env.PORT || 5000;
