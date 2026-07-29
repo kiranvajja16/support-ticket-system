@@ -53,7 +53,42 @@ const getMyTickets = async(req,res)=>{
     }
 };
 
+const getTicketById=async(req,res)=>{
+    try{
+        const ticket = await Ticket.findById(req.params.id)
+        .populate("createdBy","name email")
+        .populate("assignedTo","name email");
+
+        if(!ticket){
+            return res.status(404).json({
+                success:false,
+                message:"Ticket not found",
+            });
+        }
+
+        if(ticket.createdBy._id.toString()!== req.user.id &&
+        req.user.role !== "admin"){
+            return res.status(403).json({
+                success:false,
+                message:"Access denied",
+            });
+        }
+        res.status(200).json({
+            success:true,
+            ticket,
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error",
+        });
+    }
+};
+
 module.exports={
     createTicket,
     getMyTickets,
+    getTicketById,
 }
