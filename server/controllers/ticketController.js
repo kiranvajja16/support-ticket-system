@@ -24,7 +24,7 @@ const createTicket = async(req,res)=>{
         });
     }
     catch(err){
-        console.error(error);
+        console.error(err);
         res.status(500).json({
             success:false,
             message:"Server Error",
@@ -67,11 +67,14 @@ const getTicketById=async(req,res)=>{
             });
         }
 
-        if(ticket.createdBy._id.toString()!== req.user.id &&
-        req.user.role !== "admin"){
+        if (
+            ticket.createdBy._id.toString() !== req.user.id &&
+            ticket.assignedTo?.toString() !== req.user.id &&
+            req.user.role !== "admin"
+        ) {
             return res.status(403).json({
-                success:false,
-                message:"Access denied",
+                success: false,
+                message: "Access denied",
             });
         }
         res.status(200).json({
@@ -181,10 +184,18 @@ const assignTicket = async(req,res)=>{
         }
 
         const agent = await User.findById(agentId);
-        if(!agent){
+
+        if (!agent) {
+            return res.status(404).json({
+                success: false,
+                message: "Agent not found",
+            });
+        }
+
+        if (agent.role !== "agent") {
             return res.status(400).json({
-                success:false,
-                message:"Selected user is not an agent",
+                success: false,
+                message: "Selected user is not an agent",
             });
         }
         ticket.assignedTo=agent._id;
@@ -194,6 +205,100 @@ const assignTicket = async(req,res)=>{
         res.status(200).json({
             success:true,
             message:"Ticket assigned successfully",
+            ticket,
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error",
+        });
+    }
+};
+
+const getTickets = async(req,res)=>{
+    try{
+        let tickets=[];
+        if(req.user.role === "admin"){
+            tickets= await Ticket.find()
+            .populate("createdBy","name email")
+            .populate("assignedTo","name email")
+            .sort({createdAt:-1});
+        }
+        else if(req.user.role==="agent"){
+            tickets= await Ticket.find({
+                assignedTo:req.user.id
+           }).populate("createdBy","name email")
+           .populate("assignedTo","name email")
+           .sort({createdAt:-1});
+        }
+        else {
+            tickets= await Ticket.find({
+                createdBy:req.user.id
+            })
+            .populate("assignedTo","name email")
+            .sort({createdAt: -1});
+        }
+        res.status(200).json({
+            success:true,
+            totalTickets:tickets.length,
+            tickets
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error"
+        });
+    }
+};
+
+const updateTicketStatus = async(req,res)=>{
+    try{
+        const {status}= req.body;
+        const allowedStatus = [
+            "Open",
+            "In Progress",
+            "Resolved",
+            "Closed",
+        ];
+        if(!allowedStatus.includes(status)){
+            return res.status(400).json({
+                success:false,
+                message:"Invalid status",
+            });
+        }
+        const ticket = await Ticket.findById(req.params.id);
+        if(!ticket){
+            return res.status(404).json({
+                success:false,
+                message:"Ticket not found",
+            });
+        }
+
+        if(req.user.role==="customer"){
+            return res.status(403).json({
+                success:false,
+                message:"Customers cannot update ticket status",
+            })
+        }
+
+        if(req.user.role === "agent"){
+            if(!ticket.assignedTo || ticket.assignedTo.toString()!== req.user.id){
+                return res.status(403).json({
+                    success:false,
+                    message:"This ticket is not assigned to you",
+                });
+            }
+        }
+        ticket.status=status;
+        await ticket.save();
+        res.status(200).json({
+            success:false,
+            message:'Ticket status updated successfully',
+            ticket,
         });
     }
     catch(err){
@@ -211,4 +316,6 @@ module.exports={
     getTicketById,
     updateTicket,
     assignTicket,
+    getTickets,
+    updateTicketStatus,
 }
