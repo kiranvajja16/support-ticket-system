@@ -1,6 +1,7 @@
 const express = require("express")
 const cors=require("cors");
 const authRoutes=require("./routes/authRoutes");
+const ticketRoutes=require("./routes/ticketRoutes")
 const {protect} = require("./middleware/authMiddleware");
 require("dotenv").config();
 console.log(process.env.MONGO_URI);
@@ -13,6 +14,7 @@ connectDB()
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth",authRoutes);
+app.use("/api/tickets",ticketRoutes);
 
 app.get("/",(req,res)=>{
     res.send("Support Ticket System API is running...");
