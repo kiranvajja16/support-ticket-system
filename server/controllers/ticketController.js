@@ -87,8 +87,75 @@ const getTicketById=async(req,res)=>{
     }
 };
 
+const updateTicket =  async(req,res)=>{
+    try{
+        const ticket = await Ticket.findById(req.params.id);
+        if(!ticket){
+            return res.status(404).json({
+                success:false,
+                message:"Ticket not found",
+            });
+        }
+
+        if(req.user.role ==="customer"){
+            if(ticket.createdBy.toString()!== req.user.id){
+                return res.status(403).json({
+                    success:false,
+                    message:"Access denied",
+                });
+            }
+
+            if(ticket.status !== "Open"){
+                return res.status(400).json({
+                    success:false,
+                    message:"Only open tickets can be updated",
+                });
+            }
+
+            ticket.title=req.body.title || ticket.title;
+            ticket.description=req.body.description || ticket.description;
+            ticket.category=req.body.category || ticket.category;
+        }
+
+        else if (req.user.role ==="agent"){
+            if(!ticket.assignedTo || 
+                ticket.assignedTo.toString()!==req.user.id
+            ){
+                return res.status(403).json({
+                    success:false,
+                    message:"This ticket is not assigned to you",
+                });
+            }
+            ticket.status=req.body.status || ticket.status;
+        }
+
+        else if (req.user.role === "admin"){
+            ticket.title= req.body.title || ticket.title;
+            ticket.description = req.body.description || ticket.description;
+            ticket.category = req.body.category || ticket.category;
+            ticket.status = req.body.status || ticket.status;
+            ticket.assignedTo = req.body.assignedTo || ticket.assignedTo;
+        }
+        await ticket.save();
+        res.status(200).json({
+            success:true,
+            message:"Ticket updated successfully",
+            ticket,
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error",
+        });
+    }
+
+};
+
 module.exports={
     createTicket,
     getMyTickets,
     getTicketById,
+    updateTicket,
 }
