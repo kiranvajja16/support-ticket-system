@@ -1,4 +1,5 @@
 const Ticket = require("../models/Ticket");
+const User = require("../models/User");
 
 const createTicket = async(req,res)=>{
     try{
@@ -153,9 +154,61 @@ const updateTicket =  async(req,res)=>{
 
 };
 
+const assignTicket = async(req,res)=>{
+    try{
+        if(req.user.role !== "admin"){
+            return res.status(403).json({
+                success:false,
+                message:"Only admin can assign tickets",
+            });
+        }
+
+        const ticket = await Ticket.findById(req.params.id);
+        if(!ticket){
+            return res.status(404).json({
+                success:false,
+                message:"Ticket not found",
+            });
+        }
+
+        const {agentId} = req.body;
+
+        if(!agentId){
+            return res.status(400).json({
+                success:false,
+                message:"Agent ID is required",
+            });
+        }
+
+        const agent = await User.findById(agentId);
+        if(!agent){
+            return res.status(400).json({
+                success:false,
+                message:"Selected user is not an agent",
+            });
+        }
+        ticket.assignedTo=agent._id;
+        ticket.status="In Progress";
+        await ticket.save();
+
+        res.status(200).json({
+            success:true,
+            message:"Ticket assigned successfully",
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error",
+        });
+    }
+};
+
 module.exports={
     createTicket,
     getMyTickets,
     getTicketById,
     updateTicket,
+    assignTicket,
 }

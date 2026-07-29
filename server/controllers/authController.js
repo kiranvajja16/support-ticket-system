@@ -6,6 +6,7 @@ const registerUser=async(req,res)=>{
     console.log("Register API hit");
     try{
         const {name,email,password,role}=req.body;
+        const allowedRoles = ["customer", "agent", "admin"];
         if(!name || !email || !password){
             return res.status(400).json({
                 message:"Please fill all required fields",
@@ -23,7 +24,7 @@ const registerUser=async(req,res)=>{
             name,
             email,
             password:hashedPassword,
-            role,
+            role: allowedRoles.includes(role) ? role : "customer",
         });
         res.status(201).json({
             success:true,
