@@ -31,6 +31,29 @@ const createTicket = async(req,res)=>{
     }
 };
 
+const getMyTickets = async(req,res)=>{
+    try{
+        const tickets = await Ticket.find({
+            createdBy: req.user.id,
+        }).populate("assignedTo","name email")
+        .sort({createdAt: -1});
+
+        res.status(200).json({
+            success:true,
+            count:tickets.length,
+            tickets,
+        });
+    }
+    catch(err){
+        console.error(err);
+        res.status(500).json({
+            success:false,
+            message:"Server Error",
+        });
+    }
+};
+
 module.exports={
     createTicket,
+    getMyTickets,
 }
