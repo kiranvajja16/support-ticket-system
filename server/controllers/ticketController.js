@@ -69,7 +69,7 @@ const getTicketById=async(req,res)=>{
 
         if (
             ticket.createdBy._id.toString() !== req.user.id &&
-            ticket.assignedTo?.toString() !== req.user.id &&
+            ticket.assignedTo?._id.toString() !== req.user.id &&
             req.user.role !== "admin"
         ) {
             return res.status(403).json({
@@ -121,16 +121,13 @@ const updateTicket =  async(req,res)=>{
             ticket.category=req.body.category || ticket.category;
         }
 
-        else if (req.user.role ==="agent"){
-            if(!ticket.assignedTo || 
-                ticket.assignedTo.toString()!==req.user.id
-            ){
-                return res.status(403).json({
-                    success:false,
-                    message:"This ticket is not assigned to you",
-                });
-            }
-            ticket.status=req.body.status || ticket.status;
+        else if (req.user.role === "agent") {
+
+            return res.status(403).json({
+                success: false,
+                message: "Use /api/tickets/:id/status to update ticket status."
+            });
+
         }
 
         else if (req.user.role === "admin"){
@@ -173,6 +170,12 @@ const assignTicket = async(req,res)=>{
                 message:"Ticket not found",
             });
         }
+        if (ticket.status === "Closed") {
+        return res.status(400).json({
+            success: false,
+            message: "Closed tickets cannot be assigned",
+        });
+        }
 
         const {agentId} = req.body;
 
@@ -201,6 +204,7 @@ const assignTicket = async(req,res)=>{
         ticket.assignedTo=agent._id;
         ticket.status="In Progress";
         await ticket.save();
+        
 
         res.status(200).json({
             success:true,
@@ -293,10 +297,23 @@ const updateTicketStatus = async(req,res)=>{
                 });
             }
         }
+        const validTransitions = {
+            "Open": ["In Progress"],
+            "In Progress": ["Resolved"],
+            "Resolved": ["Closed"],
+            "Closed": [],
+        };
+
+        if (!validTransitions[ticket.status].includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Cannot change status from ${ticket.status} to ${status}`,
+            });
+        }
         ticket.status=status;
         await ticket.save();
         res.status(200).json({
-            success:false,
+            success:true,
             message:'Ticket status updated successfully',
             ticket,
         });
