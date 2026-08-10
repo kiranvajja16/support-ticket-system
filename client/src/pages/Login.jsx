@@ -28,10 +28,18 @@ const Login = () => {
     setLoading(false);
 
     if (result.success) {
-      navigate("/dashboard");
-    } else {
-      setError(result.message);
-    }
+  const role = result.data.user.role;
+
+  if (role === "admin") {
+    navigate("/dashboard");
+  } else if (role === "agent") {
+    navigate("/agent-dashboard");
+  } else {
+    navigate("/tickets");
+  }
+} else {
+  setError(result.message);
+}
   };
 
   return (

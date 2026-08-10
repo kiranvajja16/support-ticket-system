@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
+import AdminDashboard from "./pages/ADashboard.jsx";
+import AgentDashboard from "./pages/AgDashboard.jsx";
 
 const App = () => {
   return (
@@ -14,7 +15,9 @@ const App = () => {
 
         <Route path="/register" element={<Register />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<AdminDashboard />} />
+
+        <Route path="/agent-dashboard" element={<AgentDashboard />} />
       </Routes>
     </BrowserRouter>
   );
