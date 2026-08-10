@@ -44,28 +44,48 @@ const registerUser=async(req,res)=>{
     }
 };
 
-const loginUser=async(req,res)=>{
-    try{
-        const {email,password}=req.body;
-        if(!email || !password){
+const loginUser = async (req, res) => {
+    try {
+        console.log("========== LOGIN DEBUG ==========");
+        console.log("Request body:", req.body);
+
+        const { email, password } = req.body;
+
+        console.log("Email:", email);
+        console.log("Password received:", password ? "YES" : "NO");
+
+        const user = await User.findOne({ email });
+
+        console.log(
+            "User found:",
+            user
+                ? {
+                      id: user._id,
+                      email: user.email,
+                      role: user.role,
+                  }
+                : "NO USER FOUND"
+        );
+
+        if (!user) {
             return res.status(400).json({
-                message:"Please provide email and password",
+                success: false,
+                message: "Invalid email or password",
             });
         }
 
-        const user=await User.findOne({email});
-        if(!user){
-            return res.status(401).json({
-                message:"Invalid email or password",
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        console.log("Password match:", isMatch);
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email or password",
             });
         }
 
-        const isMatch=await bcrypt.compare(password,user.password);
-        if(!isMatch){
-            return res.status(401).json({
-                message:"Invalid email or password",
-            });
-        }
+        // Your existing JWT code below...
 
         const token =jwt.sign(
             {

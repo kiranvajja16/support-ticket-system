@@ -1,72 +1,92 @@
-import { createContext,useContext,useState } from "react";
-import {loginUser,registerUser} from "../services/api";
+import { createContext, useContext, useState } from "react";
+import { loginUser, registerUser } from "../services/api";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({children})=>{
-    const [user,setUser]=useState(
-        JSON.parse(localStorage.getItem("user"))||null
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(
+        JSON.parse(localStorage.getItem("user")) || null
     );
 
-    const [token,setToken]=useState(
-        localStorage.getItem("token")||null
+    const [token, setToken] = useState(
+        localStorage.getItem("token") || null
     );
 
-    const login = async(email,password)=>{
-        try{
-            const response= await loginUser({
+    const login = async (email, password) => {
+        try {
+            // loginUser already returns response.data
+            const data = await loginUser({
                 email,
                 password,
             });
 
-            console.log("Login response:",response.data);
+            console.log("Login response:", data);
 
-            const data= response.data;
+            localStorage.setItem("token", data.token);
 
-            localStorage.setItem("token",data.token);
-            if(data.user){
-                localStorage.setItem("user",JSON.stringify(data.user));
+            if (data.user) {
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(data.user)
+                );
+
                 setUser(data.user);
             }
+
             setToken(data.token);
 
-            return{
-                success:true,
+            return {
+                success: true,
                 data,
             };
-        }
-        catch(error){
+        } catch (error) {
             console.error("Login error:", error);
+
             return {
-                success:false,
-                message:error.response?.data?.message||"Login failed",
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Login failed",
             };
         }
     };
 
-    const register = async(name, email , password,role ="user")=>{
-        try{
-            const response = await registerUser({
-                name,email,password,role,
+    const register = async (
+        name,
+        email,
+        password,
+        role = "customer"
+    ) => {
+        try {
+            const data = await registerUser({
+                name,
+                email,
+                password,
+                role,
             });
-            console.log("Register response:",response.data);
+
+            console.log("Register response:", data);
+
             return {
-                success:true,
-                data:response.data,
+                success: true,
+                data,
             };
-        }
-        catch(error){
-            console.error("Register error:",error);
-            return{
-                success:false,
-                message:error.response?.data?.message||"Registration failed",
+        } catch (error) {
+            console.error("Register error:", error);
+
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    "Registration failed",
             };
         }
     };
 
-    const logout = () =>{
+    const logout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+
         setToken(null);
         setUser(null);
     };
@@ -74,7 +94,11 @@ export const AuthProvider = ({children})=>{
     return (
         <AuthContext.Provider
             value={{
-                user,token,login,register,logout,
+                user,
+                token,
+                login,
+                register,
+                logout,
                 isAuthenticated: !!token,
             }}
         >
@@ -83,6 +107,6 @@ export const AuthProvider = ({children})=>{
     );
 };
 
-export const useAuth= ()=>{
+export const useAuth = () => {
     return useContext(AuthContext);
 };
