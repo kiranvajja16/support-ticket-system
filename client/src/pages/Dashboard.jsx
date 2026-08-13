@@ -15,7 +15,7 @@ const Dashboard = () => {
 
       <h1>Customer Dashboard</h1>
 
-      <h2>Welcome, {user?.name || "Customer"} 👋</h2>
+      <h2>Welcome, {user?.name || "Customer"} </h2>
 
       <p>
         Email: {user?.email || "Not available"}

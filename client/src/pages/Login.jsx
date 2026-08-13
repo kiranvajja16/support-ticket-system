@@ -31,12 +31,12 @@ const Login = () => {
   const role = result.data.user.role;
 
   if (role === "admin") {
-    navigate("/dashboard");
-  } else if (role === "agent") {
-    navigate("/agent-dashboard");
-  } else {
-    navigate("/tickets");
-  }
+  navigate("/admin-dashboard");
+} else if (role === "agent") {
+  navigate("/agent-dashboard");
+} else if (role === "customer") {
+  navigate("/dashboard");
+}
 } else {
   setError(result.message);
 }

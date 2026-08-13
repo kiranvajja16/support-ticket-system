@@ -12,7 +12,7 @@ const AgentDashboard = () => {
 
         console.log("Agent tickets:", data);
 
-        // Handle different possible API response structures
+        
         const ticketList = data.tickets || data.data || data || [];
 
         setTickets(Array.isArray(ticketList) ? ticketList : []);
