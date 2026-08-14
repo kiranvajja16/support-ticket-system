@@ -52,6 +52,12 @@ export const getTickets = async () => {
   return response.data;
 };
 
+export const getMyTickets = async () => {
+  const response = await API.get("/tickets/my");
+
+  return response.data;
+};
+
 
 export const createTicket = async (ticketData) => {
   const response = await API.post("/tickets", ticketData);
