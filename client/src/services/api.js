@@ -72,6 +72,11 @@ export const getTicketById = async (id) => {
   return response.data;
 };
 
+export const updateTicket = async(id,ticketData)=>{
+  const response = await API.put(`/tickets/${id}`,ticketData);
+  return response.data;
+}
+
 
 export const askAI = async (message) => {
   const response = await API.post("/ai/chat", {
