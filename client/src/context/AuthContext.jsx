@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            // loginUser already returns response.data
+            
             const data = await loginUser({
                 email,
                 password,
