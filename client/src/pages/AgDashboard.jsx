@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getTickets } from "../services/api";
 
 const AgentDashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -12,12 +14,21 @@ const AgentDashboard = () => {
 
         console.log("Agent tickets:", data);
 
-        
-        const ticketList = data.tickets || data.data || data || [];
+        const ticketList = data.tickets || [];
 
-        setTickets(Array.isArray(ticketList) ? ticketList : []);
+        setTickets(
+          Array.isArray(ticketList) ? ticketList : []
+        );
       } catch (error) {
-        console.error("Failed to fetch tickets:", error);
+        console.error(
+          "Failed to fetch tickets:",
+          error
+        );
+
+        setError(
+          error.response?.data?.message ||
+            "Failed to load tickets"
+        );
       } finally {
         setLoading(false);
       }
@@ -26,29 +37,43 @@ const AgentDashboard = () => {
     fetchTickets();
   }, []);
 
-  const assignedTickets = tickets.filter(
-    (ticket) => ticket.agent || ticket.assignedTo
-  );
+  // Backend already returns only tickets
+  // assigned to this agent.
+  const assignedTickets = tickets;
 
   const openTickets = assignedTickets.filter(
-    (ticket) => ticket.status?.toLowerCase() === "open"
+    (ticket) =>
+      ticket.status?.toLowerCase() === "open"
   );
 
   const inProgressTickets = assignedTickets.filter(
-    (ticket) => ticket.status?.toLowerCase() === "in progress"
+    (ticket) =>
+      ticket.status?.toLowerCase() === "in progress"
   );
 
   const resolvedTickets = assignedTickets.filter(
-    (ticket) => ticket.status?.toLowerCase() === "resolved"
+    (ticket) =>
+      ticket.status?.toLowerCase() === "resolved"
   );
 
   if (loading) {
     return <h2>Loading Agent Dashboard...</h2>;
   }
 
+  if (error) {
+    return (
+      <div>
+        <h1>Agent Dashboard</h1>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1>Agent Dashboard</h1>
+
+      {/* Statistics */}
 
       <div>
         <h2>Assigned Tickets</h2>
@@ -78,25 +103,40 @@ const AgentDashboard = () => {
         <p>No tickets assigned to you.</p>
       ) : (
         assignedTickets.map((ticket) => (
-          <div key={ticket._id || ticket.id}>
+          <div key={ticket._id}>
+
             <h3>{ticket.title}</h3>
 
             <p>
-              Customer:{" "}
-              {ticket.customer?.name ||
-                ticket.customerName ||
+              <strong>Customer:</strong>{" "}
+              {ticket.createdBy?.name ||
                 "Unknown"}
             </p>
 
             <p>
-              Status: {ticket.status || "Unknown"}
+              <strong>Category:</strong>{" "}
+              {ticket.category}
             </p>
 
             <p>
-              Priority: {ticket.priority || "Normal"}
+              <strong>Status:</strong>{" "}
+              {ticket.status}
             </p>
 
+            <p>
+              <strong>Assigned To:</strong>{" "}
+              {ticket.assignedTo?.name ||
+                "You"}
+            </p>
+
+            <Link
+              to={`/tickets/${ticket._id}`}
+            >
+              View Ticket
+            </Link>
+
             <hr />
+
           </div>
         ))
       )}
