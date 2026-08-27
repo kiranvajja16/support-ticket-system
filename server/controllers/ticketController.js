@@ -3,18 +3,18 @@ const User = require("../models/User");
 
 const createTicket = async(req,res)=>{
     try{
-        const {title,description,category}=req.body;
+        const {title, description, category, priority} = req.body;
         if(!title||!description){
             return res.status(400).json({
                 success:false,
                 message:"Title and description are required",
             });
         }
-
         const ticket = await Ticket.create({
             title,
             description,
             category,
+            priority,
             createdBy:req.user.id,
         });
         res.status(201).json({
